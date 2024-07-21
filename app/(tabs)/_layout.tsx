@@ -1,37 +1,33 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import React from "react";
+import { Tabs } from "expo-router";
+import { AntDesign, Feather } from "@expo/vector-icons";
+import { TabsOption } from "@/utils/screensUtils";
+import Colors from "@/constants/Colors";
 
-import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+const _layout = () => {
+  const TabsScreenOptions: Record<string, any> = {
+    headerShown: false,
+    tabBarIconStyle: {
+      backgroundColor: "white",
+      marginBottom: -14,
+    },
+    tabBarStyle: {
+      backgroundColor: Colors["bg-3"],
+      borderColor: "transparent",
+      height: 60,
+    },
+    tabBarHideOnKeyboard: true,
+  };
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-      }}>
+    <Tabs screenOptions={{ ...TabsScreenOptions }}>
+      <Tabs.Screen name="index" options={TabsOption(Feather, "clipboard")} />
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
-          ),
-        }}
+        name="about"
+        options={TabsOption(AntDesign, "infocirlceo")}
       />
     </Tabs>
   );
-}
+};
+
+export default _layout;
