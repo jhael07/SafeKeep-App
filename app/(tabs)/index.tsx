@@ -11,11 +11,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/Colors";
 import { useSQLiteContext } from "expo-sqlite";
 import { Incident } from "@/types";
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
-import VigilanceCard from "@/components/VigilanceCard";
+import { AntDesign } from "@expo/vector-icons";
+import IncidentCard from "@/components/IncidentCard";
 import BottomSheet, { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import DatabaseOperations from "@/services/DatabaseOperations";
 import * as ImagePicker from "expo-image-picker";
+import NoIncidentsPlaceholder from "@/components/NoIncidentsPlaceholder";
 
 const index = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -48,36 +49,9 @@ const index = () => {
       <Text style={style.screenTitle}>Todas las Incidencias</Text>
 
       <View style={{ width: 385, gap: 10, alignSelf: "center", marginTop: 30 }}>
-        {incidents.length === 0 ? (
-          <View
-            style={{
-              marginTop: 140,
-              gap: 14,
-              alignSelf: "center",
-              width: 360,
-              alignItems: "center",
-            }}
-          >
-            <FontAwesome
-              name="inbox"
-              size={96}
-              color={"darkgray"}
-              style={{ opacity: 0.7 }}
-            />
-            <Text
-              style={{
-                fontSize: 16,
-                textAlign: "center",
-                color: "lightgray",
-                opacity: 0.7,
-              }}
-            >
-              No existe ningun incidente, presiona crear incidente.
-            </Text>
-          </View>
-        ) : null}
+        {incidents.length === 0 ? <NoIncidentsPlaceholder /> : null}
         {incidents.map((item) => (
-          <VigilanceCard key={item.id} incident={item} />
+          <IncidentCard key={item.id} incident={item} />
         ))}
       </View>
 
