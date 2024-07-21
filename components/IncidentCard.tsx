@@ -29,9 +29,7 @@ const IncidentCard = ({
         }}
       />
       <Text style={style.title}>{incident.title}</Text>
-
       <Text style={style.description}>{incident.description}</Text>
-
       <TouchableOpacity style={style.audio}>
         <Ionicons name="play-circle" size={44} color={Colors.primary} />
         <Text style={{ color: "white" }}>Reproducir el audio</Text>

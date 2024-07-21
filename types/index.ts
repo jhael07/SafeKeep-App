@@ -7,3 +7,8 @@ export type Incident = {
 };
 
 export type TABLES = "incidents";
+
+export type IncidentForm = {
+  title: string;
+  description: string;
+};
