@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/Colors";
 import { useSQLiteContext } from "expo-sqlite";
-import { Incident, IncidentForm } from "@/types";
+import { FileAppWrite, Incident, IncidentForm } from "@/types";
 import IncidentCard from "@/components/IncidentCard";
 import BottomSheet from "@gorhom/bottom-sheet";
 import DatabaseOperations from "@/services/DatabaseOperations";
@@ -11,10 +11,13 @@ import * as ImagePicker from "expo-image-picker";
 import NoIncidentsPlaceholder from "@/components/NoIncidentsPlaceholder";
 import PlusButton from "@/components/PlusButton";
 import CreateIncidentBottomsheet from "@/components/bottomsheets/CreateIncidentBottomsheet";
+import { randomUUID } from "expo-crypto";
 
 const index = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [imageFile, setImageFile] = useState<FileAppWrite>();
+
   const [incidentForm, setIncidentForm] = useState<IncidentForm>({
     title: "",
     description: "",
@@ -45,7 +48,19 @@ const index = () => {
       aspect: [10, 6],
     });
 
-    if (!image.canceled) setImagePreview(image.assets?.[0].uri ?? "");
+    if (!image.canceled) {
+      const imageFromPicker = image.assets?.[0];
+
+      const imageFile: FileAppWrite = {
+        name: imageFromPicker.fileName ?? "",
+        type: imageFromPicker.mimeType ?? "",
+        size: imageFromPicker.fileSize ?? 0,
+        uri: imageFromPicker.uri ?? "",
+      };
+
+      setImageFile(imageFile);
+      setImagePreview(image.assets?.[0].uri ?? "");
+    }
   };
 
   useEffect(() => {
@@ -69,6 +84,7 @@ const index = () => {
       <PlusButton onPress={openBottomsheet} />
 
       <CreateIncidentBottomsheet
+        imgFile={imageFile}
         dbOperations={operations}
         handleKeyboardVisisble={handleKeyboardVisisble}
         incidentForm={incidentForm}
