@@ -178,7 +178,10 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
               startRecording();
               console.log(recording);
             }}
-            style={[style.uploadBtn, { height: 70 }]}
+            style={[
+              style.uploadBtn,
+              { height: 70, backgroundColor: Colors.primary },
+            ]}
           >
             <Text style={{ color: "white" }}>Grabar Audio</Text>
           </TouchableOpacity>
