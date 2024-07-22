@@ -80,7 +80,7 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
     undefined
   );
   const [permissionResponse, requestPermission] = Audio.usePermissions();
-  const [sound, setSound] = useState<any>();
+  const [sound, setSound] = useState<Audio.Sound>();
   async function startRecording() {
     try {
       if (permissionResponse?.status !== "granted") {
@@ -92,29 +92,27 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
         playsInSilentModeIOS: true,
       });
 
-      console.log("Starting recording..");
       const { recording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
       setRecording(recording);
-      console.log("Recording started");
     } catch (err) {
       console.error("Failed to start recording", err);
     }
   }
 
   async function stopRecording() {
-    console.log("Stopping recording..");
     setRecording(undefined);
     await recording?.stopAndUnloadAsync();
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
     });
     const uri = recording?.getURI();
+
     if (uri) {
       const { sound } = await Audio.Sound.createAsync({ uri });
       setSound(sound);
-      await sound.playAsync();
+      // await sound.playAsync();
     }
   }
 
@@ -176,7 +174,6 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
           <TouchableOpacity
             onPress={() => {
               startRecording();
-              console.log(recording);
             }}
             style={[
               style.uploadBtn,
@@ -189,7 +186,6 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
           <TouchableOpacity
             onPress={() => {
               stopRecording();
-              console.log(recording);
             }}
             style={[style.uploadBtn, { height: 70 }]}
           >
