@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, FlatList } from "react-native";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/Colors";
 import { useSQLiteContext } from "expo-sqlite";
@@ -12,9 +12,11 @@ import NoIncidentsPlaceholder from "@/components/NoIncidentsPlaceholder";
 import PlusButton from "@/components/PlusButton";
 import CreateIncidentBottomsheet from "@/components/bottomsheets/CreateIncidentBottomsheet";
 import { randomUUID } from "expo-crypto";
+import { useContextProvider } from "@/context/ContextProvider";
 
 const index = () => {
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const { incidents, setIncidents } = useContextProvider();
+
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<FileAppWrite>();
 
@@ -65,8 +67,8 @@ const index = () => {
 
   useEffect(() => {
     (async () => {
-      operations.createTableQuery("incidents");
-      setIncidents((await operations.getFromTable("incidents")) ?? []);
+      operations.createTableQuery("incidentsTest");
+      setIncidents((await operations.getFromTable("incidentsTest")) ?? []);
     })();
   }, []);
 
@@ -74,11 +76,14 @@ const index = () => {
     <SafeAreaView style={{ backgroundColor: Colors["bg-2"], flex: 1 }}>
       <Text style={style.screenTitle}>Todas las Incidencias</Text>
 
-      <View style={{ width: 385, gap: 10, alignSelf: "center", marginTop: 30 }}>
+      <View style={{ width: 385, gap: 10, alignSelf: "center", marginTop: 30, flex: 1 }}>
         {incidents.length === 0 ? <NoIncidentsPlaceholder /> : null}
-        {incidents.map((item) => (
-          <IncidentCard key={item.id} incident={item} />
-        ))}
+
+        <FlatList
+          data={incidents}
+          ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+          renderItem={({ item }) => <IncidentCard key={item.id} incident={item} />}
+        />
       </View>
 
       <PlusButton onPress={openBottomsheet} />

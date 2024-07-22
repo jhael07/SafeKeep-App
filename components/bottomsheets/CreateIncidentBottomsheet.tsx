@@ -1,3 +1,7 @@
+import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { CreateIncidentBottomsheetProps, CreateIncidentBottomsheetRef } from "@/types";
+import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
+import React, { forwardRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,25 +12,12 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import React, { forwardRef, useEffect, useState } from "react";
-
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetTextInput,
-} from "@gorhom/bottom-sheet";
-
 import Colors from "@/constants/Colors";
-
-import {
-  CreateIncidentBottomsheetProps,
-  CreateIncidentBottomsheetRef,
-  FileAppWrite,
-} from "@/types";
-
+import AppWrite from "@/services/AppWrite";
 import { randomUUID } from "expo-crypto";
-
-import { Client, ID, Storage } from "react-native-appwrite";
-import { Audio } from "expo-av";
+import { object, string } from "yup";
+import useRecording from "@/hooks/useRecording";
+import { useContextProvider } from "@/context/ContextProvider";
 
 type Ref = CreateIncidentBottomsheetRef;
 type props = CreateIncidentBottomsheetProps;
@@ -43,86 +34,59 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
     dbOperations,
   } = props;
 
+  const { setIncidents } = useContextProvider();
+
+  const { uploadFile } = AppWrite.Storage();
+  const { startRecording, stopRecording, isRecording, audioFile } = useRecording();
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const client = new Client(); // Init your React Native SDK
-
-  client
-    .setEndpoint("https://cloud.appwrite.io/v1")
-    .setProject(process.env.EXPO_PUBLIC_PROJECT_ID)
-    .setPlatform("com.jehlicot.appvigilancia"); // Your application ID or bundle ID.
-
-  const storage = new Storage(client);
-
-  const AddImageToRemoteStorage = async (img: FileAppWrite) => {
-    try {
-      const imgPromise = await storage.createFile(
-        process.env.EXPO_PUBLIC_BUCKET_ID,
-        ID.unique(),
-        img
-      );
-
-      return imgPromise;
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
+  const formValidation = object({
+    audio: string().required("El audio es requerido."),
+    description: string().required("La descripción es requerida."),
+    title: string().required("El titulo es requerido"),
+    picture: string().required("La imagen es requerida."),
+  });
 
   const handleOnChange = (name: "title" | "description", txt: any) =>
     setIncidentForm((prev) => ({ ...prev, [name]: txt }));
+
+  const handleUploadIncident = async () => {
+    let picture: string | undefined;
+    let audio: string | undefined;
+
+    try {
+      setIsLoading(true);
+      if (imgFile) picture = await uploadFile(imgFile);
+      if (audioFile) audio = await uploadFile(audioFile);
+
+      const formData = {
+        id: randomUUID(),
+        title: incidentForm.title,
+        description: incidentForm.description,
+        picture,
+        audio,
+      };
+
+      await formValidation.validate(formData);
+      await dbOperations.create(
+        "incidentsTest",
+        ["id", "title", "description", "picture", "audio"],
+        [formData.id, incidentForm.title, incidentForm.description, picture, audio]
+      );
+
+      setIncidents((await dbOperations.getFromTable("incidentsTest")) ?? []);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     Keyboard.addListener("keyboardDidHide", (e) => handleKeyboardVisisble());
     return () => Keyboard.removeAllListeners("keyboardDidHide");
   }, []);
-
-  const [recording, setRecording] = useState<Audio.Recording | undefined>(
-    undefined
-  );
-  const [permissionResponse, requestPermission] = Audio.usePermissions();
-  const [sound, setSound] = useState<Audio.Sound>();
-  async function startRecording() {
-    try {
-      if (permissionResponse?.status !== "granted") {
-        console.log("Requesting permission..");
-        await requestPermission();
-      }
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      setRecording(recording);
-    } catch (err) {
-      console.error("Failed to start recording", err);
-    }
-  }
-
-  async function stopRecording() {
-    setRecording(undefined);
-    await recording?.stopAndUnloadAsync();
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-    });
-    const uri = recording?.getURI();
-
-    if (uri) {
-      const { sound } = await Audio.Sound.createAsync({ uri });
-      setSound(sound);
-      // await sound.playAsync();
-    }
-  }
-
-  useEffect(() => {
-    return sound
-      ? () => {
-          sound.unloadAsync();
-        }
-      : undefined;
-  }, [sound]);
 
   return (
     <BottomSheet
@@ -137,19 +101,12 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
       index={-1}
       ref={ref as any}
       android_keyboardInputMode="adjustPan"
-      backdropComponent={(props) => (
-        <BottomSheetBackdrop {...props} disappearsOnIndex={-1} />
-      )}
+      backdropComponent={(props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} />}
     >
       <View style={{ width: 380, alignSelf: "center", gap: 24 }}>
         <TouchableOpacity onPress={handleOnPressImage} style={style.uploadBtn}>
           {imagePreview.length > 0 ? (
-            <Image
-              height={140}
-              width={380}
-              source={{ uri: imagePreview }}
-              resizeMode="cover"
-            />
+            <Image height={140} width={380} source={{ uri: imagePreview }} resizeMode="cover" />
           ) : (
             <Text style={{ color: "white" }}>Subir Imagen</Text>
           )}
@@ -170,54 +127,29 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
           style={style.input}
         />
 
-        {!recording ? (
-          <TouchableOpacity
-            onPress={() => {
-              startRecording();
-            }}
-            style={[
-              style.uploadBtn,
-              { height: 70, backgroundColor: Colors.primary },
-            ]}
-          >
+        {!isRecording ? (
+          <TouchableOpacity onPress={startRecording} style={[style.uploadBtn, style.audioBtn]}>
+            <FontAwesome name="microphone" size={32} color="darkgray" />
             <Text style={{ color: "white" }}>Grabar Audio</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            onPress={() => {
-              stopRecording();
-            }}
-            style={[style.uploadBtn, { height: 70 }]}
+            onPress={stopRecording}
+            style={[style.uploadBtn, style.audioBtn, { gap: 12 }]}
           >
-            <Text style={{ color: "white" }}>Parar Grabacion</Text>
+            <FontAwesome6 name="stop-circle" size={28} color={Colors.primary} />
+            <Text style={{ color: Colors.primary }}>Parar Grabacion</Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
-          onPress={async () => {
-            try {
-              setIsLoading(true);
-              // dbOperations.create(
-              //   "incidents",
-              //   ["id", "title", "description", "picture", "audio"],
-              //   [randomUUID(), incidentForm.title, incidentForm.description]
-              // );
-
-              if (imgFile) await AddImageToRemoteStorage(imgFile);
-            } catch (err: any) {
-              alert(err.message);
-            } finally {
-              setIsLoading(false);
-            }
-          }}
+          onPress={handleUploadIncident}
           style={[style.uploadBtn, style.saveButton]}
         >
           {isLoading ? (
             <ActivityIndicator color={"white"} size={"large"} />
           ) : (
-            <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
-              Guardar
-            </Text>
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>Guardar</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -256,4 +188,6 @@ const style = StyleSheet.create({
     height: 140,
     opacity: 0.9,
   },
+
+  audioBtn: { height: 70, flexDirection: "row", gap: 20 },
 });

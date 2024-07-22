@@ -11,17 +11,14 @@ class DatabaseOperations<T> {
     try {
       return this._db.execAsync(
         `CREATE TABLE IF NOT EXISTS ${table}
-        (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, date VARCHAR, description TEXT, picture TEXT, audio Text)`
+        (id TEXT PRIMARY KEY, title TEXT, date VARCHAR, description TEXT, picture TEXT, audio Text)`
       );
     } catch (err: any) {
       console.log(err.message);
     }
   }
 
-  async getFromTable(
-    table: TABLES,
-    condition?: string
-  ): Promise<Array<T> | null> {
+  async getFromTable(table: TABLES, condition?: string): Promise<Array<T> | null> {
     try {
       return this._db.getAllAsync<T>(`SELECT * from ${table} ${condition}`);
     } catch (err: any) {
@@ -36,8 +33,11 @@ class DatabaseOperations<T> {
     values: unknown[]
   ): Promise<SQLiteRunResult | null> {
     try {
+      console.log(values.map((item) => (typeof item === "string" ? `'${item}'` : item)).join(","));
       return await this._db.runAsync(`INSERT INTO ${table}(${columns.join(",")})
-                            VALUES(${values.join(",")})`);
+                            VALUES(${values
+                              .map((item) => (typeof item === "string" ? `'${item}'` : item))
+                              .join(",")})`);
     } catch (err: any) {
       console.error(err.message);
       return null;

@@ -1,9 +1,4 @@
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  GestureResponderEvent,
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity, GestureResponderEvent } from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
@@ -30,7 +25,7 @@ const style = StyleSheet.create({
     bottom: 70,
     right: 20,
     alignSelf: "center",
-    width: 360,
+    width: 60,
     flexDirection: "row",
     gap: 8,
     justifyContent: "flex-end",

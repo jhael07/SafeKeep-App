@@ -10,7 +10,7 @@ export type Incident = {
   audio: string;
 };
 
-export type TABLES = "incidents";
+export type TABLES = "incidents" | "incidentsTest";
 
 export type IncidentForm = {
   title: string;
