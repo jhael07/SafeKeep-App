@@ -1,6 +1,10 @@
 {
   "build": {
     "development": {
+      "env": {
+        "EXPO_PUBLIC_PROJECT_ID": "669caa390022bcbcf8fa",
+        "EXPO_PUBLIC_BUCKET_ID": "669caa5f0023b3d4f410"
+      },
       "developmentClient": true,
       "distribution": "internal"
     },
