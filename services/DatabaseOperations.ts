@@ -33,7 +33,6 @@ class DatabaseOperations<T> {
     values: unknown[]
   ): Promise<SQLiteRunResult | null> {
     try {
-      console.log(values.map((item) => (typeof item === "string" ? `'${item}'` : item)).join(","));
       return await this._db.runAsync(`INSERT INTO ${table}(${columns.join(",")})
                             VALUES(${values
                               .map((item) => (typeof item === "string" ? `'${item}'` : item))
@@ -42,6 +41,10 @@ class DatabaseOperations<T> {
       console.error(err.message);
       return null;
     }
+  }
+
+  async resetTable(table: TABLES): Promise<void> {
+    await this._db.runAsync(`DELETE FROM ${table}`);
   }
 }
 

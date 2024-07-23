@@ -33,20 +33,11 @@ const IncidentCard = ({ incident }: { incident: Incident }): React.JSX.Element =
         setPlayingItem({ ...incident, isPlaying: false });
         clearInterval(timer.current);
       }
-    }, 500);
+    }, 300);
   };
 
   const playAudio = async (fileId: string) => {
     try {
-      // if (!playingItem && !sound.current._loaded) {
-      //   setIsLoading(true);
-      //   if (uri) await sound.current.loadAsync({ uri });
-      //   setIsLoading(false);
-      //   await sound.current.playAsync();
-      //   setPlayingItem({ ...incident, isPlaying: true });
-      //   checkStatus();
-      // }
-
       if (playingItem?.id === incident?.id) {
         if (playingItem.isPlaying) {
           setPlayingItem({ ...incident, isPlaying: false });
@@ -88,7 +79,6 @@ const IncidentCard = ({ incident }: { incident: Incident }): React.JSX.Element =
           uri: incident.picture,
         }}
       />
-      <Text style={style.title}>{incidentId}</Text>
       <Text style={style.title}>{incident.title}</Text>
       <Text style={style.description}>{incident.description}</Text>
       <TouchableOpacity
@@ -150,6 +140,7 @@ const style = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
     opacity: 0.9,
+    marginTop: 10,
   },
   card: {
     width: "100%",

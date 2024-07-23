@@ -1,11 +1,5 @@
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetTextInput,
-} from "@gorhom/bottom-sheet";
-import {
-  CreateIncidentBottomsheetProps,
-  CreateIncidentBottomsheetRef,
-} from "@/types";
+import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { CreateIncidentBottomsheetProps, CreateIncidentBottomsheetRef } from "@/types";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import React, { forwardRef, useEffect, useState } from "react";
 import {
@@ -43,8 +37,7 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
   const { setIncidents } = useContextProvider();
 
   const { uploadFile } = AppWrite.Storage();
-  const { startRecording, stopRecording, isRecording, audioFile } =
-    useRecording();
+  const { startRecording, stopRecording, isRecording, audioFile } = useRecording();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -61,9 +54,9 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
   const handleUploadIncident = async () => {
     let picture: string | undefined;
     let audio: string | undefined;
-    let docId: string = "";
 
     try {
+      Keyboard.dismiss();
       setIsLoading(true);
       if (imgFile) picture = (await uploadFile(imgFile))?.url;
       if (audioFile) {
@@ -83,18 +76,12 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
       await dbOperations.create(
         "incidentsTest",
         ["id", "title", "description", "picture", "audio"],
-        [
-          formData.id,
-          incidentForm.title,
-          incidentForm.description,
-          picture,
-          audio,
-        ]
+        [formData.id, incidentForm.title, incidentForm.description, picture, audio]
       );
 
+      onClose?.();
       alert("Nota guardada exitosamente.");
       setIncidents((await dbOperations.getFromTable("incidentsTest")) ?? []);
-      onClose?.();
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -120,19 +107,12 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
       index={-1}
       ref={ref as any}
       android_keyboardInputMode="adjustPan"
-      backdropComponent={(props) => (
-        <BottomSheetBackdrop {...props} disappearsOnIndex={-1} />
-      )}
+      backdropComponent={(props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} />}
     >
       <View style={{ width: 380, alignSelf: "center", gap: 24 }}>
         <TouchableOpacity onPress={handleOnPressImage} style={style.uploadBtn}>
           {imagePreview.length > 0 ? (
-            <Image
-              height={140}
-              width={380}
-              source={{ uri: imagePreview }}
-              resizeMode="cover"
-            />
+            <Image height={140} width={380} source={{ uri: imagePreview }} resizeMode="cover" />
           ) : (
             <Text style={{ color: "white" }}>Subir Imagen</Text>
           )}
@@ -154,10 +134,7 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
         />
 
         {!isRecording ? (
-          <TouchableOpacity
-            onPress={startRecording}
-            style={[style.uploadBtn, style.audioBtn]}
-          >
+          <TouchableOpacity onPress={startRecording} style={[style.uploadBtn, style.audioBtn]}>
             <FontAwesome name="microphone" size={32} color="darkgray" />
             <Text style={{ color: "white" }}>Grabar Audio</Text>
           </TouchableOpacity>
@@ -178,9 +155,7 @@ const CreateIncidentBottomsheet = forwardRef<Ref, props>((props, ref) => {
           {isLoading ? (
             <ActivityIndicator color={"white"} size={"large"} />
           ) : (
-            <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
-              Guardar
-            </Text>
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>Guardar</Text>
           )}
         </TouchableOpacity>
       </View>
