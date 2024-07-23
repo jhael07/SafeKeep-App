@@ -27,12 +27,12 @@ const IncidentCard = ({ incident }: { incident: Incident }): React.JSX.Element =
 
   const checkStatus = () => {
     timer.current = setInterval(async () => {
-      sound.current.getStatusAsync().then(async (value: any) => {
-        if (value.positionMillis === value.durationMillis) {
-          setPlayingItem({ ...incident, isPlaying: false });
-          clearInterval(timer.current);
-        }
-      });
+      const value = (await sound.current.getStatusAsync()) as any;
+
+      if (value.positionMillis === value.durationMillis) {
+        setPlayingItem({ ...incident, isPlaying: false });
+        clearInterval(timer.current);
+      }
     }, 500);
   };
 
@@ -52,8 +52,13 @@ const IncidentCard = ({ incident }: { incident: Incident }): React.JSX.Element =
           setPlayingItem({ ...incident, isPlaying: false });
           await sound.current.pauseAsync();
         } else {
+          const value = (await sound.current.getStatusAsync()) as any;
+
           setPlayingItem({ ...incident, isPlaying: true });
-          await sound.current.playAsync();
+          await sound.current.playFromPositionAsync(
+            value.positionMillis === value.durationMillis ? 0 : value.positionMillis
+          );
+
           checkStatus();
         }
         return;
