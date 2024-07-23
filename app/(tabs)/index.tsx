@@ -76,13 +76,24 @@ const index = () => {
     <SafeAreaView style={{ backgroundColor: Colors["bg-2"], flex: 1 }}>
       <Text style={style.screenTitle}>Todas las Incidencias</Text>
 
-      <View style={{ width: 385, gap: 10, alignSelf: "center", marginTop: 30, flex: 1 }}>
+      <View
+        style={{
+          width: 385,
+          gap: 10,
+          alignSelf: "center",
+          marginTop: 30,
+          flex: 1,
+        }}
+      >
         {incidents.length === 0 ? <NoIncidentsPlaceholder /> : null}
 
         <FlatList
           data={incidents}
           ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
-          renderItem={({ item }) => <IncidentCard key={item.id} incident={item} />}
+          ListFooterComponent={() => <View style={{ height: 20 }} />}
+          renderItem={({ item }) => (
+            <IncidentCard key={item.id} incident={item} />
+          )}
         />
       </View>
 

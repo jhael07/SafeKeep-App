@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { ElementType, useEffect, useRef, useState } from "react";
 import Colors from "@/constants/Colors";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Incident } from "@/types";
-import { Audio, AVPlaybackStatus } from "expo-av";
+import { Audio } from "expo-av";
 import AppWrite from "@/services/AppWrite";
 
 /**
@@ -27,11 +27,12 @@ const IncidentCard = ({
 }: {
   incident: Incident;
 }): React.JSX.Element => {
-  const { getFileCustom } = AppWrite.Storage();
+  const { getFileById } = AppWrite.Storage();
 
   const sound = useRef<Audio.Sound>(new Audio.Sound());
   const timer = useRef<any>();
 
+  const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
@@ -51,60 +52,28 @@ const IncidentCard = ({
         );
       }
 
-      if (status.isLoaded && !status.isPlaying) {
-        clearTimeout(timer.current);
-      }
+      if (status.isLoaded && !status.isPlaying) clearTimeout(timer.current);
     });
   }, [isPlaying]);
 
-  const playAudio = async () => {
+  const playAudio = async (fileId: string) => {
     try {
       if (isPlaying) {
         sound.current.pauseAsync();
         setIsPlaying(false);
       } else {
-        // const status = (await sound.current.getStatusAsync()) as any;
-
-        const uri = await getFileCustom();
+        const uri = await getFileById(fileId);
 
         if (uri) {
           if (!sound.current._loaded) {
+            setIsLoading(true);
             await sound.current.loadAsync({ uri });
           }
-
+          setIsLoading(false);
           await sound.current.playAsync();
           setIsPlaying(true);
         }
       }
-
-      // if ((await sound.current?.getStatusAsync())?.isLoaded) {
-      //   if ((sound.current as any)?.isPlaying === false) {
-      //     sound.current?.playAsync();
-      //     setIsPlaying(true);
-      //   } else {
-      //     sound.current?.stopAsync();
-      //     setIsPlaying(true);
-      //   }
-      // }
-      // if (uri) {
-      //   const { sound: soundObj } = await Audio.Sound.createAsync(
-      //     { uri },
-      //     { progressUpdateIntervalMillis: 100 },
-      //     (status: any) => {
-      //       if (status.isPlaying) {
-      //         setIsPlaying(true);
-      //       } else {
-      //         setIsPlaying(false);
-      //       }
-      //     },
-      //     true
-      //   );
-      //   sound.current = soundObj;
-      //   await sound.current?.playAsync();
-
-      //   setIsPlaying(true);
-      // }
-      // await sound.current.unloadAsync();
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -123,21 +92,25 @@ const IncidentCard = ({
       />
       <Text style={style.title}>{incident.title}</Text>
       <Text style={style.description}>{incident.description}</Text>
-      <TouchableOpacity onPress={playAudio} style={style.audio}>
+      <TouchableOpacity
+        disabled={isLoading}
+        onPress={async () => playAudio(incident?.audio ?? "")}
+        style={style.audio}
+      >
         {isPlaying ? (
-          <>
-            <MaterialIcons
-              name="stop-circle"
-              size={44}
-              color={Colors.primary}
-            />
-            <Text style={{ color: "white" }}>Pausar audio</Text>
-          </>
+          <AudioAction
+            isLoading={isLoading}
+            Icon={MaterialIcons}
+            iconName="stop-circle"
+            description={"Pausar audio"}
+          />
         ) : (
-          <>
-            <Ionicons name="play-circle" size={44} color={Colors.primary} />
-            <Text style={{ color: "white" }}>Reproducir el audio</Text>
-          </>
+          <AudioAction
+            isLoading={isLoading}
+            Icon={Ionicons}
+            iconName="play-circle"
+            description={"Reproducir el audio"}
+          />
         )}
       </TouchableOpacity>
     </View>
@@ -146,11 +119,33 @@ const IncidentCard = ({
 
 export default IncidentCard;
 
+const AudioAction = (props: {
+  Icon: ElementType;
+  iconName: string;
+  description: string;
+  isLoading?: boolean;
+}) => {
+  const { Icon, iconName, description, isLoading } = props;
+  return (
+    <>
+      {isLoading ? (
+        <>
+          <ActivityIndicator size={40} color={Colors.primary} />
+          <Text style={{ color: "white" }}>Descargando audio...</Text>
+        </>
+      ) : (
+        <>
+          <Icon name={iconName} size={44} color={Colors.primary} />
+          <Text style={{ color: "white" }}>{description}</Text>
+        </>
+      )}
+    </>
+  );
+};
+
 const style = StyleSheet.create({
   audio: { flexDirection: "row", gap: 10, alignItems: "center" },
-
   description: { color: "white", lineHeight: 22, marginBottom: 8 },
-
   title: {
     color: Colors.primary,
     fontSize: 18,

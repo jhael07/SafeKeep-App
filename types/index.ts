@@ -3,7 +3,7 @@ import DatabaseOperations from "@/services/DatabaseOperations";
 import BottomSheet from "@gorhom/bottom-sheet";
 
 export type Incident = {
-  id?: number;
+  id?: string;
   title: string;
   description: string;
   picture: string;
