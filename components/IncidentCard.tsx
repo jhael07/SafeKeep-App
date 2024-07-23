@@ -1,4 +1,11 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import Colors from "@/constants/Colors";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -15,57 +22,94 @@ import AppWrite from "@/services/AppWrite";
  * @param {Incident} incident - Object with the incident's information such as the id, title, description, image, and audio.
  * @returns {React.JSX.Element} A React element representing the incident card UI.
  */
-const IncidentCard = ({ incident }: { incident: Incident }): React.JSX.Element => {
+const IncidentCard = ({
+  incident,
+}: {
+  incident: Incident;
+}): React.JSX.Element => {
   const { getFileCustom } = AppWrite.Storage();
 
-  const soundObj = useRef<Audio.Sound>();
+  const sound = useRef<Audio.Sound>(new Audio.Sound());
+  const timer = useRef<any>();
+
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    sound.current.getStatusAsync().then(async (status: any) => {
+      if (status.isLoaded && status.positionMillis === status.durationMillis)
+        await sound.current.unloadAsync();
+
+      if (status.isPlaying) {
+        timer.current = setTimeout(
+          async () => {
+            setIsPlaying(false);
+            await sound.current.unloadAsync();
+          },
+          status.positionMillis === 0
+            ? status.durationMillis
+            : status.durationMillis - status.positionMillis
+        );
+      }
+
+      if (status.isLoaded && !status.isPlaying) {
+        clearTimeout(timer.current);
+      }
+    });
+  }, [isPlaying]);
 
   const playAudio = async () => {
     try {
-      const uri = await getFileCustom();
-      if (uri) {
-        const { sound } = await Audio.Sound.createAsync(
-          { uri },
-          { progressUpdateIntervalMillis: 100 },
-          (status: any) => {
-            if (status.isPlaying) {
-              alert("isPlaying");
-            } else {
-              alert("isnotPlaying");
-            }
-          }
-        );
+      if (isPlaying) {
+        sound.current.pauseAsync();
+        setIsPlaying(false);
+      } else {
+        // const status = (await sound.current.getStatusAsync()) as any;
 
-        if (sound) {
-          soundObj.current = sound;
-          await soundObj.current?.playAsync();
+        const uri = await getFileCustom();
+
+        if (uri) {
+          if (!sound.current._loaded) {
+            await sound.current.loadAsync({ uri });
+          }
+
+          await sound.current.playAsync();
           setIsPlaying(true);
         }
       }
+
+      // if ((await sound.current?.getStatusAsync())?.isLoaded) {
+      //   if ((sound.current as any)?.isPlaying === false) {
+      //     sound.current?.playAsync();
+      //     setIsPlaying(true);
+      //   } else {
+      //     sound.current?.stopAsync();
+      //     setIsPlaying(true);
+      //   }
+      // }
+      // if (uri) {
+      //   const { sound: soundObj } = await Audio.Sound.createAsync(
+      //     { uri },
+      //     { progressUpdateIntervalMillis: 100 },
+      //     (status: any) => {
+      //       if (status.isPlaying) {
+      //         setIsPlaying(true);
+      //       } else {
+      //         setIsPlaying(false);
+      //       }
+      //     },
+      //     true
+      //   );
+      //   sound.current = soundObj;
+      //   await sound.current?.playAsync();
+
+      //   setIsPlaying(true);
+      // }
+      // await sound.current.unloadAsync();
     } catch (err: any) {
       alert(err.message);
+    } finally {
     }
   };
-
-  // useEffect(() => {
-  // sound._callOnPlaybackStatusUpdateForNewStatus((av)=>{
-
-  // }, [])
-
-  // let playBackStatus: AVPlaybackStatus = {} as any;
-
-  // useEffect(() => {
-  //   (async () => {
-  //     if (soundObj.current) {
-  //       soundObj.current.setOnPlaybackStatusUpdate(async (status) => {
-  //         playBackStatus = status;
-  //         const audioStatus = await  soundObj.current?.getStatusAsync();
-  //         console.log(audioStatus);
-  //       });
-  //     }
-  //   })();
-  // }, [ soundObj.current]);
 
   return (
     <View style={style.card}>
@@ -79,22 +123,14 @@ const IncidentCard = ({ incident }: { incident: Incident }): React.JSX.Element =
       />
       <Text style={style.title}>{incident.title}</Text>
       <Text style={style.description}>{incident.description}</Text>
-      <TouchableOpacity
-        onPress={
-          !isPlaying
-            ? playAudio
-            : async () => {
-                if (soundObj.current) {
-                  soundObj.current?.pauseAsync();
-                  setIsPlaying(false);
-                }
-              }
-        }
-        style={style.audio}
-      >
+      <TouchableOpacity onPress={playAudio} style={style.audio}>
         {isPlaying ? (
           <>
-            <MaterialIcons name="stop-circle" size={44} color={Colors.primary} />
+            <MaterialIcons
+              name="stop-circle"
+              size={44}
+              color={Colors.primary}
+            />
             <Text style={{ color: "white" }}>Pausar audio</Text>
           </>
         ) : (

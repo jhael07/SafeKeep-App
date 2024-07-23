@@ -1,4 +1,9 @@
-import { View, StyleSheet, TouchableOpacity, GestureResponderEvent } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  GestureResponderEvent,
+} from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
@@ -11,7 +16,7 @@ const PlusButton = (props: PlusButton) => {
   return (
     <View style={style.optionsContainer}>
       <TouchableOpacity onPress={props.onPress}>
-        <AntDesign name="pluscircle" size={44} color={Colors.primary} />
+        <AntDesign name="pluscircle" size={52} color={Colors.primary} />
       </TouchableOpacity>
     </View>
   );
