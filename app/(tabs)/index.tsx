@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/Colors";
@@ -11,8 +11,8 @@ import * as ImagePicker from "expo-image-picker";
 import NoIncidentsPlaceholder from "@/components/NoIncidentsPlaceholder";
 import PlusButton from "@/components/PlusButton";
 import CreateIncidentBottomsheet from "@/components/bottomsheets/CreateIncidentBottomsheet";
-import { randomUUID } from "expo-crypto";
 import { useContextProvider } from "@/context/ContextProvider";
+import { Octicons } from "@expo/vector-icons";
 
 const index = () => {
   const { incidents, setIncidents } = useContextProvider();
@@ -39,6 +39,7 @@ const index = () => {
     setImagePreview("");
     bottomSheetRef.current?.expand();
   };
+
   const closeBottomsheet = () => {
     bottomSheetRef.current?.close();
   };
@@ -72,10 +73,49 @@ const index = () => {
     })();
   }, []);
 
+  // const timer2 = useRef<NodeJS.Timeout>();
+
+  // const initCheckStatus = () => {
+  //   timer2.current = setInterval(async () => {
+  //     const status = (await sound.current.getStatusAsync()) as any;
+
+  //     if (!status.isLoaded) clearInterval(timer2.current);
+
+  //     console.log({ status, incident: incidentId });
+  //   }, 500);
+  // };
+
+  // useEffect(() => {
+  //   initCheckStatus();
+  // }, [sound.current]);
+
   return (
     <SafeAreaView style={{ backgroundColor: Colors["bg-2"], flex: 1 }}>
       <Text style={style.screenTitle}>Todas las Incidencias</Text>
-
+      <View
+        style={{
+          width: "86%",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          alignSelf: "center",
+          marginTop: 10,
+        }}
+      >
+        <TouchableOpacity
+          style={{
+            borderWidth: 0.8,
+            borderColor: "red",
+            padding: 10,
+            borderRadius: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <Text style={{ color: "red" }}>Reset</Text>
+          <Octicons name="trash" size={28} color={"red"} />
+        </TouchableOpacity>
+      </View>
       <View
         style={{
           width: 385,
@@ -89,11 +129,16 @@ const index = () => {
 
         <FlatList
           data={incidents}
+          keyExtractor={({ id }) => id ?? ""}
           ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
           ListFooterComponent={() => <View style={{ height: 20 }} />}
-          renderItem={({ item }) => (
-            <IncidentCard key={item.id} incident={item} />
-          )}
+          renderItem={({ item }) => {
+            // console.log("------------------------");
+            // if (incidentId !== item.audio) {
+            //   sound.current.loadAsync(item.)
+            // }
+            return <IncidentCard key={item.id} incident={item} />;
+          }}
         />
       </View>
 

@@ -1,17 +1,11 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from "react-native";
 import React, { ElementType, useEffect, useRef, useState } from "react";
 import Colors from "@/constants/Colors";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Incident } from "@/types";
 import { Audio } from "expo-av";
 import AppWrite from "@/services/AppWrite";
+import { useContextProvider } from "@/context/ContextProvider";
 
 /**
  * ### IncidentCard
@@ -22,61 +16,60 @@ import AppWrite from "@/services/AppWrite";
  * @param {Incident} incident - Object with the incident's information such as the id, title, description, image, and audio.
  * @returns {React.JSX.Element} A React element representing the incident card UI.
  */
-const IncidentCard = ({
-  incident,
-}: {
-  incident: Incident;
-}): React.JSX.Element => {
+const IncidentCard = ({ incident }: { incident: Incident }): React.JSX.Element => {
   const { getFileById } = AppWrite.Storage();
+  const { incidentId, sound, playingItem, setPlayingItem } = useContextProvider();
 
-  const sound = useRef<Audio.Sound>(new Audio.Sound());
-  const timer = useRef<any>();
+  const timer = useRef<NodeJS.Timeout>();
+  // let timer: NodeJS.Timeout | undefined = undefined;
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
 
-  useEffect(() => {
-    sound.current.getStatusAsync().then(async (status: any) => {
-      if (status.isLoaded && status.positionMillis === status.durationMillis)
-        await sound.current.unloadAsync();
-
-      if (status.isPlaying) {
-        timer.current = setTimeout(
-          async () => {
-            setIsPlaying(false);
-            await sound.current.unloadAsync();
-          },
-          status.positionMillis === 0
-            ? status.durationMillis
-            : status.durationMillis - status.positionMillis
-        );
-      }
-
-      if (status.isLoaded && !status.isPlaying) clearTimeout(timer.current);
-    });
-  }, [isPlaying]);
+  const checkStatus = () => {
+    timer.current = setInterval(async () => {
+      sound.current.getStatusAsync().then(async (value: any) => {
+        if (value.positionMillis === value.durationMillis) {
+          setPlayingItem({ ...incident, isPlaying: false });
+          clearInterval(timer.current);
+        }
+      });
+    }, 500);
+  };
 
   const playAudio = async (fileId: string) => {
     try {
-      if (isPlaying) {
-        sound.current.pauseAsync();
-        setIsPlaying(false);
-      } else {
-        const uri = await getFileById(fileId);
+      // if (!playingItem && !sound.current._loaded) {
+      //   setIsLoading(true);
+      //   if (uri) await sound.current.loadAsync({ uri });
+      //   setIsLoading(false);
+      //   await sound.current.playAsync();
+      //   setPlayingItem({ ...incident, isPlaying: true });
+      //   checkStatus();
+      // }
 
-        if (uri) {
-          if (!sound.current._loaded) {
-            setIsLoading(true);
-            await sound.current.loadAsync({ uri });
-          }
-          setIsLoading(false);
+      if (playingItem?.id === incident?.id) {
+        if (playingItem.isPlaying) {
+          setPlayingItem({ ...incident, isPlaying: false });
+          await sound.current.pauseAsync();
+        } else {
+          setPlayingItem({ ...incident, isPlaying: true });
           await sound.current.playAsync();
-          setIsPlaying(true);
+          checkStatus();
         }
+        return;
       }
+
+      const uri = await getFileById(fileId);
+
+      await sound.current.unloadAsync();
+      setIsLoading(true);
+      if (uri) await sound.current.loadAsync({ uri });
+      setIsLoading(false);
+      setPlayingItem({ ...incident, isPlaying: true });
+      await sound.current.playAsync();
+      checkStatus();
     } catch (err: any) {
       alert(err.message);
-    } finally {
     }
   };
 
@@ -90,6 +83,7 @@ const IncidentCard = ({
           uri: incident.picture,
         }}
       />
+      <Text style={style.title}>{incidentId}</Text>
       <Text style={style.title}>{incident.title}</Text>
       <Text style={style.description}>{incident.description}</Text>
       <TouchableOpacity
@@ -97,7 +91,7 @@ const IncidentCard = ({
         onPress={async () => playAudio(incident?.audio ?? "")}
         style={style.audio}
       >
-        {isPlaying ? (
+        {playingItem?.id === incident?.id && playingItem.isPlaying ? (
           <AudioAction
             isLoading={isLoading}
             Icon={MaterialIcons}
