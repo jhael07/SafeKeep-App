@@ -1,4 +1,11 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import React, { ElementType, useEffect, useRef, useState } from "react";
 import Colors from "@/constants/Colors";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -16,20 +23,22 @@ import { useContextProvider } from "@/context/ContextProvider";
  * @param {Incident} incident - Object with the incident's information such as the id, title, description, image, and audio.
  * @returns {React.JSX.Element} A React element representing the incident card UI.
  */
-const IncidentCard = ({ incident }: { incident: Incident }): React.JSX.Element => {
+const IncidentCard = ({
+  incident,
+}: {
+  incident: Incident;
+}): React.JSX.Element => {
   const { getFileById } = AppWrite.Storage();
-  const { incidentId, sound, playingItem, setPlayingItem } = useContextProvider();
+  const { sound, playingItem, setPlayingItem } = useContextProvider();
 
   const timer = useRef<NodeJS.Timeout>();
-  // let timer: NodeJS.Timeout | undefined = undefined;
 
   const [isLoading, setIsLoading] = useState(false);
 
   const checkStatus = () => {
     timer.current = setInterval(async () => {
-      const value = (await sound.current.getStatusAsync()) as any;
-
-      if (value.positionMillis === value.durationMillis) {
+      const audioStatus = (await sound.current.getStatusAsync()) as any;
+      if (audioStatus.positionMillis === audioStatus.durationMillis) {
         setPlayingItem({ ...incident, isPlaying: false });
         clearInterval(timer.current);
       }
@@ -43,20 +52,20 @@ const IncidentCard = ({ incident }: { incident: Incident }): React.JSX.Element =
           setPlayingItem({ ...incident, isPlaying: false });
           await sound.current.pauseAsync();
         } else {
-          const value = (await sound.current.getStatusAsync()) as any;
+          const audioStatus = (await sound.current.getStatusAsync()) as any;
+          const audioPosition =
+            audioStatus.positionMillis === audioStatus.durationMillis
+              ? 0
+              : audioStatus.positionMillis;
 
           setPlayingItem({ ...incident, isPlaying: true });
-          await sound.current.playFromPositionAsync(
-            value.positionMillis === value.durationMillis ? 0 : value.positionMillis
-          );
-
+          await sound.current.playFromPositionAsync(audioPosition);
           checkStatus();
         }
         return;
       }
 
       const uri = await getFileById(fileId);
-
       await sound.current.unloadAsync();
       setIsLoading(true);
       if (uri) await sound.current.loadAsync({ uri });

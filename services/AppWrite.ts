@@ -6,6 +6,9 @@ import StorageAppWrite from "./StorageAppWrite";
  * including simplified access to Appwrite Storage services,database Services, etc..
  */
 class AppWrite {
+  /**
+   * Appwrite client to interact with the platform
+   */
   private static _client: Client;
 
   /**

@@ -1,6 +1,7 @@
 import { FileAppWrite } from "@/types";
 import { Client, ID, Storage } from "react-native-appwrite";
-
+/**
+ * This class help you connect to Appwrite Storage service, and manage the upload and download of files. */
 class StorageAppWrite {
   private static _storage: Storage;
 
@@ -35,13 +36,18 @@ class StorageAppWrite {
     }
   }
 
+  /** gets the file from appwrite bucket service.
+   *
+   * @param fileId
+   * @returns
+   */
   async getFileById(fileId: string) {
     try {
-      const audioUrl = StorageAppWrite._storage
+      const fileUrl = StorageAppWrite._storage
         .getFileDownload(process.env.EXPO_PUBLIC_BUCKET_ID ?? "", fileId)
         .toString();
 
-      return audioUrl;
+      return fileUrl;
     } catch (err: any) {
       console.log(err);
     }
