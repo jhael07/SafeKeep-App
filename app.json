@@ -4,11 +4,11 @@
     "slug": "app-vigilancia",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./public/img/jhael.png",
+    "icon": "./public/img/logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./public/img/jhael.png",
+      "image": "./public/img/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#141414"
     },
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./public/img/jhael.png",
+        "foregroundImage": "./public/img/logo.png",
         "backgroundColor": "#141414"
       },
       "package": "com.jehlicot.appvigilancia"
@@ -25,7 +25,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./public/img/jhael.png"
+      "favicon": "./public/img/logo.png"
     },
     "plugins": [
       "expo-router",
